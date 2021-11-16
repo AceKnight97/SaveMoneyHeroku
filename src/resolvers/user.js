@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const _ = require("lodash");
 const moment = require("moment");
 const Email = require("../helper");
-const {isAdmin, isAuthenticated} = require("./authorization");
+const { isAdmin, isAuthenticated } = require("./authorization");
 
 
 const createToken = async (user, secret, expiresIn) => {
@@ -193,18 +193,18 @@ module.exports = {
 
     resendVerifiedEmail: combineResolvers(
       isAuthenticated,
-      async (parent, {}, { models, me }) => {
-      const user = await models.User.findById(
+      async (parent, { }, { models, me }) => {
+        const user = await models.User.findById(
           me.id,
-      );
-      if (user.isVerified) {
-        return {
-          isSuccess: false,
-          message: 'Already verified!'
+        );
+        if (user.isVerified) {
+          return {
+            isSuccess: false,
+            message: 'Already verified!'
+          }
         }
-      }
-      Email.sendVerifyEmail(user.email, user.verificationCode);
-      return { isSuccess: !!user };
+        Email.sendVerifyEmail(user.email, user.verificationCode);
+        return { isSuccess: !!user };
       }
     ),
 
@@ -224,33 +224,33 @@ module.exports = {
     },
 
     resetPassword: async (parent, { verificationCode, password }, { models }) => {
-        try {
-          const user = await models.User.findOne({
-            forgotToken: verificationCode,
-          });
-          if (!user.forgotToken) {
-            throw new AuthenticationError("Invalid verification code.");
-          }
-          const userNewPassword = await models.User.findByIdAndUpdate(
-            user._id,
-            {
-              password,
-              forgotToken: "",
-              resetPasswordExpires: undefined,
-            },
-            { new: true }
-          );
-          userNewPassword.save();
-          return {
-            token: createToken(userNewPassword, process.env.SECRET, "10m"),
-            isSuccess: true
-          };
-        } catch (error) {
-          return {
-            isSuccess: false,
-            message: `${error}`,
-          }
+      try {
+        const user = await models.User.findOne({
+          forgotToken: verificationCode,
+        });
+        if (!user.forgotToken) {
+          throw new AuthenticationError("Invalid verification code.");
         }
+        const userNewPassword = await models.User.findByIdAndUpdate(
+          user._id,
+          {
+            password,
+            forgotToken: "",
+            resetPasswordExpires: undefined,
+          },
+          { new: true }
+        );
+        userNewPassword.save();
+        return {
+          token: createToken(userNewPassword, process.env.SECRET, "10m"),
+          isSuccess: true
+        };
+      } catch (error) {
+        return {
+          isSuccess: false,
+          message: `${error}`,
+        }
+      }
     },
   },
 
